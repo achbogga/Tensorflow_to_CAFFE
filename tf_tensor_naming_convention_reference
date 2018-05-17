@@ -30,7 +30,7 @@ Conv2d_1x1
 Conv2d_1a_3x3
 
 /Branch_1
-Conv2d_0a_1x1
+Conv2d_0a_1x1 - 
 Conv2d_0b_3x3
 Conv2d_1a_3x3
 
