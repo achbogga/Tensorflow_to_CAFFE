@@ -1,8 +1,8 @@
 input: "data"
 input_dim: 1
 input_dim: 3
-input_dim: 160
-input_dim: 160
+input_dim: 256
+input_dim: 256
 layer {
   name: "conv1_3x3_s2"
   type: "Convolution"
@@ -5612,7 +5612,6 @@ layer {
     pool: MAX
     kernel_size: 3
     stride: 2
-    ceil_mode: false
   }
 }
 layer {
@@ -7824,7 +7823,7 @@ layer {
     decay_mult: 0.0
   }
   inner_product_param {
-    num_output: 128
+    num_output: 512
     weight_filler {
       type: "xavier"
     }
@@ -7902,7 +7901,7 @@ layer {
   top: "Tile1"
   tile_param {
     axis: 1
-    tiles: 128
+    tiles: 512
   }
 }
 layer {

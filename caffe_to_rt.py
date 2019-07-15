@@ -1,10 +1,10 @@
-import tensorrt as trt
+import tensorrt.legacy as trt
 import pycuda.driver as cuda
 import pycuda.autoinit
 import numpy as np
 from random import randint
 from PIL import Image
-from tensorrt.parsers import caffeparser
+from tensorrt.legacy.parsers import caffeparser
 G_LOGGER = trt.infer.ConsoleLogger(trt.infer.LogSeverity.ERROR)
 '''INPUT_LAYERS = ['data']
 OUTPUT_LAYERS = ['features']

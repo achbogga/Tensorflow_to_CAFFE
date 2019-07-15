@@ -226,7 +226,8 @@ def reduction_v4_b(bottom):
     :return: layers
     """
     
-    pool = L.Pooling(bottom, kernel_size=3, stride=2, pool=P.Pooling.MAX, ceil_mode=False)  # 896x3x3
+    pool = L.Pooling(bottom, kernel_size=3, stride=2, pool=P.Pooling.MAX)  # 896x3x3
+    conv_1x1_reduce = factorization_conv(pool, num_output=896, kernel_size=2, stride=1, pad=0)
 
     conv_3x3_reduce, conv_3x3_reduce_bn_tr, conv_3x3_reduce_bn,  conv_3x3_reduce_relu = \
         factorization_conv_bn_relu_phase(bottom, num_output=256, kernel_size=1)  # 256x8x8
@@ -245,9 +246,9 @@ def reduction_v4_b(bottom):
     conv_3x3_2a, conv_3x3_2a_bn_tr, conv_3x3_2a_bn,  conv_3x3_2a_relu = \
         factorization_conv_bn_relu_phase(conv_3x3_2, num_output=256, kernel_size=3, stride=2)  # 256x3x3
     
-    concat = L.Concat(conv_3x3, conv_3x3_1, conv_3x3_2a, pool)  # 1792(896+256+384+256)x3x3
+    concat = L.Concat(conv_3x3, conv_3x3_1, conv_3x3_2a, conv_1x1_reduce)  # 1792(896+256+384+256)x3x3
 
-    return pool, conv_3x3_reduce, conv_3x3_reduce_bn_tr, conv_3x3_reduce_bn,  conv_3x3_reduce_relu, \
+    return conv_1x1_reduce, pool, conv_3x3_reduce, conv_3x3_reduce_bn_tr, conv_3x3_reduce_bn,  conv_3x3_reduce_relu, \
            conv_3x3, conv_3x3_bn_tr, conv_3x3_bn,  conv_3x3_relu, \
            conv_3x3_reduce_1, conv_3x3_reduce_1_bn_tr, conv_3x3_reduce_1_bn,  conv_3x3_reduce_1_relu, \
            conv_3x3_1, conv_3x3_1_bn_tr, conv_3x3_1_bn,  conv_3x3_1_relu, \
@@ -311,7 +312,7 @@ string_c = 'n.inception_c(order)_1x1, n.inception_c(order)_1x1_bn_tr, n.inceptio
 
 
 class InceptionV4(object):
-    def __init__(self, train_src = 'train.txt', test_src = 'val.txt', embedding_size = 128, num_output = 9131):
+    def __init__(self, train_src = 'train.txt', test_src = 'val.txt', embedding_size = 512, num_output = 9131):
         self.train_data = train_src
         self.test_data = test_src
         self.classifier_num = num_output
@@ -327,7 +328,7 @@ class InceptionV4(object):
             source_data = self.test_data
             mirror = False
         n.data, n.label = L.ImageData(name = 'data', batch_size=batch_size, source = source_data_tr, shuffle = mirror,ntop=2,
-                                 transform_param=dict(crop_size=160, mean_value=[127.5, 127.5, 127.5], mirror=mirror))
+                                 transform_param=dict(crop_size=256, mean_value=[127.5, 127.5, 127.5], mirror=mirror))
 
         #n.data, n.label = L.ImageData(name = 'data', batch_size=int(batch_size/2), source = source_data_ts, shuffle = mirror,ntop=2,
         #                         transform_param=dict(crop_size=160, mean_value=[127.5, 127.5, 127.5], mirror=False), include={'phase':caffe.TEST})
@@ -364,7 +365,7 @@ class InceptionV4(object):
             exec (string_b.replace('(order)', str(i + 1)).replace('bottom', bottom))  # 896x8x8
 
         # reduction_v4_b
-        n.reduction_b_pool, n.reduction_b_3x3_reduce, n.reduction_b_3x3_reduce_bn_tr, n.reduction_b_3x3_reduce_bn,  n.reduction_b_3x3_reduce_relu, n.reduction_b_3x3, \
+        n.reduction_b_1x1_reduce, n.reduction_b_pool, n.reduction_b_3x3_reduce, n.reduction_b_3x3_reduce_bn_tr, n.reduction_b_3x3_reduce_bn,  n.reduction_b_3x3_reduce_relu, n.reduction_b_3x3, \
            n.reduction_b_3x3_bn_tr, n.reduction_b_3x3_bn,  n.reduction_b_3x3_relu, \
            n.reduction_b_3x3_reduce_1, n.reduction_b_3x3_reduce_1_bn_tr, n.reduction_b_3x3_reduce_1_bn,  n.reduction_b_3x3_reduce_1_relu, \
            n.reduction_b_3x3_1, n.reduction_b_3x3_1_bn_tr, n.reduction_b_3x3_1_bn,  n.reduction_b_3x3_1_relu, \
